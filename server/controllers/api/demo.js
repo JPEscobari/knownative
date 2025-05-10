@@ -1,5 +1,8 @@
 const path = require("path");
 const { Translate } = require("@google-cloud/translate").v2;
+// Import our new sentencepiece service
+const { tokenizeText: tokenizeWithSentencePiece, splitSentences } = require("../../utils/sentencepiece-service");
+// Keep the original tokenizer for backward compatibility if needed
 const tokenize = require("chinese-tokenizer").loadFile(
   path.join(__dirname, "../../config/cedict_ts.u8.txt")
 );
@@ -11,15 +14,34 @@ module.exports = {
   tokenizeText,
   translateSentence,
   addText,
+  splitTextIntoSentences // Export the new function
 };
 
 async function getDemo(req, res) {}
 
-function tokenizeText(req, res) {
-  const { text } = req.body;
-  const tokenizedText = tokenize(text);
-  console.log(tokenizedText);
-  res.json(tokenizedText);
+// Update to use the new sentencepiece service
+async function tokenizeText(req, res) {
+  const { text, language = 'zh' } = req.body;
+  
+  try {
+    // Use our new tokenization service
+    const tokenizedText = await tokenizeWithSentencePiece(text, language);
+    res.json(tokenizedText);
+  } catch (error) {
+    console.error('Error tokenizing text:', error);
+    // Fall back to the original tokenizer for Chinese if there's an error
+    if (language === 'zh') {
+      try {
+        const fallbackTokenizedText = tokenize(text);
+        res.json(fallbackTokenizedText);
+      } catch (fallbackError) {
+        console.error('Fallback tokenization error:', fallbackError);
+        res.status(500).json({ error: 'Failed to tokenize text' });
+      }
+    } else {
+      res.status(500).json({ error: 'Failed to tokenize text' });
+    }
+  }
 }
 
 async function translateSentence(req, res) {
@@ -32,6 +54,19 @@ async function translateSentence(req, res) {
     res.json(translations[0]);
   } catch (error) {
     res.status(400).json(error);
+  }
+}
+
+// Add a new function to split text into sentences
+function splitTextIntoSentences(req, res) {
+  const { text } = req.body;
+  
+  try {
+    const sentences = splitSentences(text);
+    res.json(sentences);
+  } catch (error) {
+    console.error('Error splitting text into sentences:', error);
+    res.status(500).json({ error: 'Failed to split text into sentences' });
   }
 }
 
