@@ -8,3 +8,7 @@ export function translateSentence(sentence) {
 export async function tokenizeText(text) {
   return sendRequest(`${BASE_URL}/tokenize`, 'POST', { text })
 }
+
+export function splitTextIntoSentences(text) {
+  return sendRequest(`${BASE_URL}/split-sentences`, 'POST', { text })
+}
