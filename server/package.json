@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@google-cloud/translate": "^8.0.3",
+    "@huggingface/inference": "^4.5.3",
     "bcrypt": "^5.1.1",
     "chinese-tokenizer": "^2.4.0",
     "cookie-parser": "^1.4.7",
@@ -15,6 +16,7 @@
     "mongoose": "^8.7.0",
     "morgan": "^1.10.0",
     "resend": "^4.4.1",
+    "sentence-splitter": "^5.0.0",
     "serve-favicon": "^2.5.0"
   },
   "scripts": {

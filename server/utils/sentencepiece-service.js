@@ -1,7 +1,7 @@
-const { HfInference } = require('@huggingface/inference');
-const { split } = require('sentence-splitter');
-const path = require('path');
 const chineseTokenizer = require('chinese-tokenizer');
+const { split } = require('sentence-splitter');
+const { HfInference } = require('@huggingface/inference');
+const path = require('path');
 require('dotenv').config();
 
 // Initialize Hugging Face client
@@ -13,7 +13,7 @@ const tokenize = chineseTokenizer.loadFile(
 );
 
 /**
- * The tokenizeText fucntion uses Hugging Face's tokenization API.
+ * The tokenizeText function uses Hugging Face's tokenization API.
  * If it fails, falls back to using the chinese-tokenizer.
  * The function returns an array of tokenized words with dictionary information.
  */
@@ -21,43 +21,120 @@ async function tokenizeText(text, language = 'zh') {
   try {
     // For Chinese, we can use Hugging Face with fallback to our original chinese-tokenizer.
     if (language === 'zh') {
-      // First try Hugging Face for tokenization
       try {
-        const result = await hf.tokenization({
-          model: 'google/mt5-base',
+        // Use the Hugging Face client directly with the Chinese word segmentation model
+        const result = await hf.tokenClassification({
+          model: 'ckiplab/bert-base-chinese-ws',
           inputs: text
         });
-        // Process the tokens to match the expected format.
-        const processedText = result.tokens.join('');
-        // Use our original dictionary for definitions.
-        return tokenize(processedText);
+        
+        console.log("HF tokenization result:", result);
+        
+        if (result && result.length > 0) {
+          // Process the B/I (Beginning/Inside) tagging to form complete words
+          const words = [];
+          let currentWord = '';
+          
+          for (let i = 0; i < result.length; i++) {
+            const item = result[i];
+            // Remove spaces from the token
+            const cleanToken = item.word.replace(/\s+/g, '');
+            
+            if (item.entity_group === 'B') {
+              // If we have a current word, add it to the words array
+              if (currentWord) {
+                words.push(currentWord);
+              }
+              // Start a new word
+              currentWord = cleanToken;
+            } else if (item.entity_group === 'I') {
+              // Continue the current word
+              currentWord += cleanToken;
+            }
+          }
+          
+          // Add the last word if there is one
+          if (currentWord) {
+            words.push(currentWord);
+          }
+          
+          // Use the chinese-tokenizer to get dictionary information for each word
+          const tokenizedWords = [];
+          for (const word of words) {
+            try {
+              // Try to get dictionary info for the word
+              const tokenInfo = tokenize(word);
+              if (tokenInfo && tokenInfo.length > 0) {
+                tokenizedWords.push(...tokenInfo);
+              } else {
+                // If no dictionary info, create a basic structure
+                tokenizedWords.push({
+                  text: word,
+                  traditional: word,
+                  simplified: word,
+                  matches: [{
+                    pinyinPretty: '',
+                    pinyin: '',
+                    english: word,
+                    traditional: word,
+                    simplified: word
+                  }]
+                });
+              }
+            } catch (e) {
+              console.error('Dictionary lookup error for word:', word, e);
+              // If dictionary lookup fails, create a basic structure
+              tokenizedWords.push({
+                text: word,
+                traditional: word,
+                simplified: word,
+                matches: [{
+                  pinyinPretty: '',
+                  pinyin: '',
+                  english: word,
+                  traditional: word,
+                  simplified: word
+                }]
+              });
+            }
+          }
+          
+          return tokenizedWords;
+        } else {
+          console.log("No tokens returned from Hugging Face, falling back to chinese-tokenizer");
+          return tokenize(text);
+        }
       } catch (hfError) {
         console.error('Hugging Face tokenization error, falling back to chinese-tokenizer:', hfError);
-        // If Hugging Face fails, fall back to the original tokenizer.
+        // If Hugging Face fails, fall back to the original tokenizer
         return tokenize(text);
       }
     } 
-    // For other languages, just use Hugging Face.
+    // For other languages, just use Hugging Face
     else {
-      const result = await hf.tokenization({
-        model: 'google/mt5-base',
-        inputs: text
-      });
-      
-      // Format tokens in a similar structure to chinese-tokenizer output.
-      // Including pinyin field in the matches array to maintain compatibility.
-      return result.tokens.map(token => ({
-        text: token,
-        traditional: token,
-        simplified: token,
-        matches: [{
-          pinyinPretty: '', // Empty pinyin for non-Chinese words.
-          pinyin: '',
-          english: token, // Use the token itself as the English meaning
-          traditional: token,
-          simplified: token
-        }]
-      }));
+      try {
+        const result = await hf.tokenClassification({
+          model: 'dslim/bert-base-NER',  // A general NER model for non-Chinese languages
+          inputs: text
+        });
+        
+        // Format tokens in a similar structure to chinese-tokenizer output
+        return result.map(item => ({
+          text: item.word,
+          traditional: item.word,
+          simplified: item.word,
+          matches: [{
+            pinyinPretty: '',
+            pinyin: '',
+            english: item.entity || item.word,
+            traditional: item.word,
+            simplified: item.word
+          }]
+        }));
+      } catch (error) {
+        console.error('Hugging Face tokenization error for non-Chinese text:', error);
+        throw error;
+      }
     }
   } catch (error) {
     console.error('Tokenization error:', error);

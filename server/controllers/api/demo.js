@@ -23,23 +23,29 @@ async function getDemo(req, res) {}
 async function tokenizeText(req, res) {
   const { text, language = 'zh' } = req.body;
   
+  console.log(`Tokenizing text in language: ${language}`);
+  console.log(`Text length: ${text.length} characters`);
+  
   try {
     // Use our new tokenization service
     const tokenizedText = await tokenizeWithSentencePiece(text, language);
+    console.log(`Successfully tokenized text into ${tokenizedText.length} tokens`);
     res.json(tokenizedText);
   } catch (error) {
-    console.error('Error tokenizing text:', error);
+    console.error('Error tokenizing text with SentencePiece:', error);
     // Fall back to the original tokenizer for Chinese if there's an error
     if (language === 'zh') {
+      console.log('Falling back to original Chinese tokenizer');
       try {
         const fallbackTokenizedText = tokenize(text);
+        console.log(`Successfully tokenized text with fallback into ${fallbackTokenizedText.length} tokens`);
         res.json(fallbackTokenizedText);
       } catch (fallbackError) {
         console.error('Fallback tokenization error:', fallbackError);
-        res.status(500).json({ error: 'Failed to tokenize text' });
+        res.status(500).json({ error: 'Failed to tokenize text with both primary and fallback methods' });
       }
     } else {
-      res.status(500).json({ error: 'Failed to tokenize text' });
+      res.status(500).json({ error: `Failed to tokenize ${language} text` });
     }
   }
 }
