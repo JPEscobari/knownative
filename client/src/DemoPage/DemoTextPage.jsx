@@ -171,6 +171,11 @@ export default function DemoTextPage() {
     }
   };
 
+// Console log the text to verify that the text is comming from our new Sentence-Piece Tokenizer API
+  console.log('This is your text: ', text);
+
+  
+
   return !text ? (
     'Loading ...'
   ) : (

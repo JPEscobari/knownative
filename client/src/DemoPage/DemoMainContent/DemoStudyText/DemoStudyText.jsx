@@ -23,6 +23,7 @@ export default function DemoStudyText({
       async function getTokenizedText() {
         if (text) {
           const thisTokenizedText = await demoAPI.tokenizeText(text.content);
+          console.log('Tokenized text:', thisTokenizedText);
           setTokenizedText(thisTokenizedText);
         }
       }
@@ -74,7 +75,7 @@ export default function DemoStudyText({
     return foundWord[propertyType];
   }
 
-  console.log(tokenizedText);
+  console.log('This is your tokenized text', tokenizedText);
   const words = tokenizedText.map((word, idx) => {
     const isSaved = checkSaved(word);
     const wordInfo = wordsAPI.getWordInfo(word);

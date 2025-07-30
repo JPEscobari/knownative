@@ -14,7 +14,7 @@ module.exports = {
   tokenizeText,
   translateSentence,
   addText,
-  splitTextIntoSentences // Export the new function
+  splitTextIntoSentences
 };
 
 async function getDemo(req, res) {}

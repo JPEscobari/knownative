@@ -46,6 +46,7 @@ async function tokenizeText(text, language = 'zh') {
                 words.push(currentWord);
               }
               // Start a new word
+              console.log("New word:", cleanToken);
               currentWord = cleanToken;
             } else if (item.entity_group === 'I') {
               // Continue the current word
