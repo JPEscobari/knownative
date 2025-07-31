@@ -115,7 +115,8 @@ async function tokenizeText(text, language = 'zh') {
     else {
       try {
         const result = await hf.tokenClassification({
-          model: 'dslim/bert-base-NER',  // A general NER model for non-Chinese languages
+          // This is a another model I picked for  non-Chinese languages, but need to verify if it works well.
+          model: 'dslim/bert-base-NER',  
           inputs: text
         });
         

@@ -29,7 +29,7 @@ const demoTexts = {
     beginner : {
         _id: "1",
         title: `開計程車`,
-        content: `每天我要到許多地方去，也會遇到很多人。有些人喜歡叫我「左轉」、「右轉」、「停」；有些人會把髒東西留在我的車上。不過也有一些不錯的人，可以從他們身上學到很多東西，所以我也交了好幾個朋友。真是什麼樣的人都有啊！`,
+        content: `每天我要到許多地方去`,
         source: `https://tocfl.edu.tw/assets/files/mock/rd_mock_test_BandA_en_t.pdf`,
         favorite: false,
         archived: false,
