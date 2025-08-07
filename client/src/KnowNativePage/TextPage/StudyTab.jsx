@@ -4,6 +4,7 @@ import "./StudyTab.scss";
 
 import WordPopup from "./components/WordPopup/WordPopup";
 import { getWordInfo } from "../../utilities/words-service";
+import { getAllCards } from "../../utilities/cards-api";
 
 export default function StudyTab({ text }) {
   const [tokens, setTokens] = useState([]);
@@ -26,6 +27,22 @@ export default function StudyTab({ text }) {
     }
     fetchTokens();
   }, [text]);
+
+  // Testing the Cards API
+  // This will fetch all cards and log them to the console
+  useEffect(() => {
+  async function fetchUserCards() {
+    try {
+      const cards = await getAllCards();
+      console.log('User cards:', cards);
+      console.log('Total cards:', cards.length);
+    } catch (error) {
+      console.error('Error fetching cards:', error);
+    }
+  }
+  
+  fetchUserCards();
+}, []);
 
   return (
     <section className="study">
