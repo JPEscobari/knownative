@@ -22,7 +22,7 @@ const openai = new OpenAI({
 async function tokenizeText(text) {
   try {
     const response = await openai.responses.parse({
-      model: 'chatgpt-4o-latest',
+      model: 'gpt-6-luna',
       input: [
         {
           role: 'system',
